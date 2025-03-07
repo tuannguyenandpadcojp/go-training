@@ -40,7 +40,10 @@ func StartWorkerPool(maxJobs, numWorkers, numJobs int) {
 	go func() {
 		for i := range numJobs {
 			go func() {
-				job := Job{ID: i, payload: fmt.Sprintf("Job %d", i)}
+				var jobHandler = func(ctx context.Context) Result {
+					return Result{jobID: 1, state: 1}
+				}
+				job := Job{ID: i, payload: fmt.Sprintf("Job %d", i), handler: jobHandler}
 				if err := pool.Submit(job); err != nil {
 					log.Printf("Failed to submit job with id: %d", job.ID)
 				}

@@ -46,7 +46,7 @@ func TestWorkerPool(t *testing.T) {
 }
 
 func TestWorkerPoolNonBlocking(t *testing.T) {
-	pool := NewWorkerPool(3, 5, WithNonBlocking)
+	pool := NewWorkerPool(5, 3, WithNonBlocking)
 	pool.Start(context.Background())
 
 	wait := make(chan struct{})
@@ -56,7 +56,10 @@ func TestWorkerPoolNonBlocking(t *testing.T) {
 	}
 
 	for i := range 10 {
-		job := Job{ID: i, payload: "mock", handler: blockingHandler}
+		job := Job{ID: i, payload: "mock"}
+		if i<5 {
+			job.handler = blockingHandler
+		}
 		err := pool.Submit(job)
 		if i < 5 && err != nil {
 			t.Errorf("Failed to submit job: %v", err)
