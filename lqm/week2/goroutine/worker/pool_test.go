@@ -12,20 +12,20 @@ func TestWorkerPool(t *testing.T) {
 	pool := NewWorkerPool(3, 10)
 	pool.Start(context.Background())
 
-	var jobHandlerSuccess = func (ctx context.Context) Result {
-		return Result{jobID: 1, state: 1}
+	var jobHandlerSuccess = func(ctx context.Context) Result {
+		return Result{JobID: 1, State: 1}
 	}
 
-	var jobHandlerFail = func (ctx context.Context) Result {
-		return Result{jobID: 0, state: 0}
+	var jobHandlerFail = func(ctx context.Context) Result {
+		return Result{JobID: 0, State: 0}
 	}
 
 	var mockJobs []Job
 	for i := range 5 {
-		mockJobs = append(mockJobs, Job{ID: i, payload: "mock", handler: jobHandlerSuccess}) // Success 
+		mockJobs = append(mockJobs, Job{ID: i, Payload: "mock", Handler: jobHandlerSuccess}) // Success
 	}
 	for i := 5; i < 10; i++ {
-		mockJobs = append(mockJobs, Job{ID: i, payload: "mock", handler: jobHandlerFail}) // Fail
+		mockJobs = append(mockJobs, Job{ID: i, Payload: "mock", Handler: jobHandlerFail}) // Fail
 	}
 
 	for _, job := range mockJobs {
@@ -37,7 +37,7 @@ func TestWorkerPool(t *testing.T) {
 	pool.Release()
 
 	expectSuccess, expectFail := 5, 5
-	resultSuccess, resultFail := pool.totalSucceed, pool.totalFailed
+	resultSuccess, resultFail := pool.TotalSuceed, pool.TotalFailed
 
 	utils.AssertCorrectResult(t, resultSuccess, expectSuccess)
 	utils.AssertCorrectResult(t, resultFail, expectFail)
@@ -52,13 +52,13 @@ func TestWorkerPoolNonBlocking(t *testing.T) {
 	wait := make(chan struct{})
 	var blockingHandler = func(ctx context.Context) Result {
 		<-wait
-		return Result{jobID: 1, state: 1}
+		return Result{JobID: 1, State: 1}
 	}
 
 	for i := range 10 {
-		job := Job{ID: i, payload: "mock"}
-		if i<5 {
-			job.handler = blockingHandler
+		job := Job{ID: i, Payload: "mock"}
+		if i < 5 {
+			job.Handler = blockingHandler
 		}
 		err := pool.Submit(job)
 		if i < 5 && err != nil {
@@ -75,11 +75,11 @@ func TestWorkerPoolNonBlocking(t *testing.T) {
 	pool.Release()
 
 	// Check results
-	if pool.totalSucceed != 5 {
-		t.Errorf("Expected 5 successful jobs, got %d", pool.totalSucceed)
+	if pool.TotalSuceed != 5 {
+		t.Errorf("Expected 5 successful jobs, got %d", pool.TotalSuceed)
 	}
-	if pool.totalFailed != 0 {
-		t.Errorf("Expected 0 failed jobs, got %d", pool.totalFailed)
+	if pool.TotalFailed != 0 {
+		t.Errorf("Expected 0 failed jobs, got %d", pool.TotalFailed)
 	}
 
 	goleak.VerifyNone(t)

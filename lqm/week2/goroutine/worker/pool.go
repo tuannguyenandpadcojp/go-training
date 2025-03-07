@@ -2,9 +2,9 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
-	"fmt"
 )
 
 type Pool struct {
@@ -17,7 +17,7 @@ type Pool struct {
 
 	// Defines the number of workers and job queue
 	workers int
-	jobs chan Job
+	jobs    chan Job
 
 	// Wait group to wait for all workers to finish
 	workerWaitGroup sync.WaitGroup
@@ -32,9 +32,9 @@ type Pool struct {
 	nonBlocking bool
 
 	// Job result
-	results      chan Result
-	totalSucceed int
-	totalFailed  int
+	results     chan Result
+	TotalSuceed int
+	TotalFailed int
 }
 
 type PoolOpt func(p *Pool)
@@ -45,14 +45,14 @@ func WithNonBlocking(p *Pool) {
 
 func NewWorkerPool(maxJobs, numWorkers int, opts ...PoolOpt) *Pool {
 	p := &Pool{
-		workers: numWorkers,
-		jobs: make(chan Job, maxJobs),
-		results: make(chan Result, maxJobs),
+		workers:         numWorkers,
+		jobs:            make(chan Job, maxJobs),
+		results:         make(chan Result, maxJobs),
 		workerWaitGroup: sync.WaitGroup{},
 		resultWaitGroup: sync.WaitGroup{},
-		mutex: sync.Mutex{},
+		mutex:           sync.Mutex{},
 	}
-	for _, opt := range(opts) {
+	for _, opt := range opts {
 		opt(p)
 	}
 	return p
@@ -61,7 +61,7 @@ func NewWorkerPool(maxJobs, numWorkers int, opts ...PoolOpt) *Pool {
 func (p *Pool) Start(ctx context.Context) {
 	p.mutex.Lock()
 
-	// Unlock after done 
+	// Unlock after done
 	defer p.mutex.Unlock()
 
 	if p.running {
@@ -72,7 +72,7 @@ func (p *Pool) Start(ctx context.Context) {
 	p.running = true
 	p.ctx, p.cancelFunc = context.WithCancel(ctx)
 	p.workerWaitGroup.Add(p.workers)
-	
+
 	// spawn worker goroutine
 	for i := range p.workers {
 		go worker(p.ctx, i, p.jobs, p.results, &p.workerWaitGroup)
@@ -83,10 +83,10 @@ func (p *Pool) Start(ctx context.Context) {
 	go func() {
 		defer p.resultWaitGroup.Done()
 		for result := range p.results {
-			if result.state == 1 {
-				p.totalSucceed++
+			if result.State == 1 {
+				p.TotalSuceed++
 			} else {
-				p.totalFailed++
+				p.TotalFailed++
 			}
 		}
 	}()
