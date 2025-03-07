@@ -33,7 +33,7 @@ type Pool struct {
 
 	// Job result
 	results     chan Result
-	TotalSuceed int
+	TotalSucceed int
 	TotalFailed int
 }
 
