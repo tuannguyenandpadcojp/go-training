@@ -18,7 +18,11 @@ func main() {
 	const numWorkers = 20
 	const maxJobs = 10
 
-	pool := worker.NewWorkerPool(maxJobs, numWorkers)
+	pool, err := worker.NewWorkerPool(maxJobs, numWorkers)
+	if err != nil {
+		log.Println("errors: ", err)
+		return
+	}
 	pool.Start(context.Background())
 
 	c := make(chan os.Signal, 1)

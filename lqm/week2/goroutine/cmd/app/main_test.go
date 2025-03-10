@@ -10,7 +10,8 @@ import (
 )
 
 func TestWorkerPool(t *testing.T) {
-	pool := worker.NewWorkerPool(3, 10)
+	pool, err := worker.NewWorkerPool(3, 10)
+	utils.AssertError(t, err, false)
 	pool.Start(context.Background())
 
 	var jobHandlerSuccess = func(ctx context.Context) worker.Result {
@@ -47,7 +48,9 @@ func TestWorkerPool(t *testing.T) {
 }
 
 func TestWorkerPoolNonBlocking(t *testing.T) {
-	pool := worker.NewWorkerPool(5, 3, worker.WithNonBlocking)
+	pool, err := worker.NewWorkerPool(5, 3, worker.WithNonBlocking)
+	utils.AssertError(t, err, false)
+
 	pool.Start(context.Background())
 
 	wait := make(chan struct{})
@@ -84,4 +87,21 @@ func TestWorkerPoolNonBlocking(t *testing.T) {
 	}
 
 	goleak.VerifyNone(t)
+}
+
+func TestWorkerPoolInvalidInput(t *testing.T) {
+	inputTests := []struct {
+		maxJobs     int
+		numWorkers  int
+		shouldError bool
+	}{
+		{maxJobs: 1, numWorkers: 1, shouldError: false},
+		{maxJobs: -1, numWorkers: 1, shouldError: true},
+		{maxJobs: 2, numWorkers: -1, shouldError: true},
+	}
+
+	for _, input := range inputTests {
+		_, result := worker.NewWorkerPool(input.maxJobs, input.numWorkers)
+		utils.AssertError(t, result, input.shouldError)
+	}
 }

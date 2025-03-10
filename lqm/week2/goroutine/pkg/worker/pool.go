@@ -43,7 +43,19 @@ func WithNonBlocking(p *Pool) {
 	p.nonBlocking = true
 }
 
-func NewWorkerPool(maxJobs, numWorkers int, opts ...PoolOpt) *Pool {
+type ErrNegativeInput int
+
+func (e ErrNegativeInput) Error() string {
+	return fmt.Sprintf("invalid input: input should be higher than 0: %d", e)
+}
+
+func NewWorkerPool(maxJobs, numWorkers int, opts ...PoolOpt) (*Pool, error) {
+	if numWorkers < 1 {
+		return nil, ErrNegativeInput(numWorkers)
+	}
+	if maxJobs < 1 {
+		return nil, ErrNegativeInput(maxJobs)
+	}
 	p := &Pool{
 		workers:         numWorkers,
 		jobs:            make(chan Job, maxJobs),
@@ -55,7 +67,7 @@ func NewWorkerPool(maxJobs, numWorkers int, opts ...PoolOpt) *Pool {
 	for _, opt := range opts {
 		opt(p)
 	}
-	return p
+	return p, nil
 }
 
 func (p *Pool) Start(ctx context.Context) {
