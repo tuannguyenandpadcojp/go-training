@@ -1,31 +1,32 @@
-package worker
+package main
 
 import (
 	"context"
 	"testing"
 
 	"github.com/tuannguyenandpadcojp/go-training/lqm/utils"
+	"github.com/tuannguyenandpadcojp/go-training/lqm/week2/goroutine/pkg/worker"
 	"go.uber.org/goleak"
 )
 
 func TestWorkerPool(t *testing.T) {
-	pool := NewWorkerPool(3, 10)
+	pool := worker.NewWorkerPool(3, 10)
 	pool.Start(context.Background())
 
-	var jobHandlerSuccess = func(ctx context.Context) Result {
-		return Result{JobID: 1, State: 1}
+	var jobHandlerSuccess = func(ctx context.Context) worker.Result {
+		return worker.Result{JobID: 1, State: 1}
 	}
 
-	var jobHandlerFail = func(ctx context.Context) Result {
-		return Result{JobID: 0, State: 0}
+	var jobHandlerFail = func(ctx context.Context) worker.Result {
+		return worker.Result{JobID: 0, State: 0}
 	}
 
-	var mockJobs []Job
+	var mockJobs []worker.Job
 	for i := range 5 {
-		mockJobs = append(mockJobs, Job{ID: i, Payload: "mock", Handler: jobHandlerSuccess}) // Success
+		mockJobs = append(mockJobs, worker.Job{ID: i, Payload: "mock", Handler: jobHandlerSuccess}) // Success
 	}
 	for i := 5; i < 10; i++ {
-		mockJobs = append(mockJobs, Job{ID: i, Payload: "mock", Handler: jobHandlerFail}) // Fail
+		mockJobs = append(mockJobs, worker.Job{ID: i, Payload: "mock", Handler: jobHandlerFail}) // Fail
 	}
 
 	for _, job := range mockJobs {
@@ -37,7 +38,7 @@ func TestWorkerPool(t *testing.T) {
 	pool.Release()
 
 	expectSuccess, expectFail := 5, 5
-	resultSuccess, resultFail := pool.TotalSuceed, pool.TotalFailed
+	resultSuccess, resultFail := pool.TotalSucceed, pool.TotalFailed
 
 	utils.AssertCorrectResult(t, resultSuccess, expectSuccess)
 	utils.AssertCorrectResult(t, resultFail, expectFail)
@@ -46,17 +47,17 @@ func TestWorkerPool(t *testing.T) {
 }
 
 func TestWorkerPoolNonBlocking(t *testing.T) {
-	pool := NewWorkerPool(5, 3, WithNonBlocking)
+	pool := worker.NewWorkerPool(5, 3, worker.WithNonBlocking)
 	pool.Start(context.Background())
 
 	wait := make(chan struct{})
-	var blockingHandler = func(ctx context.Context) Result {
+	var blockingHandler = func(ctx context.Context) worker.Result {
 		<-wait
-		return Result{JobID: 1, State: 1}
+		return worker.Result{JobID: 1, State: 1}
 	}
 
 	for i := range 10 {
-		job := Job{ID: i, Payload: "mock"}
+		job := worker.Job{ID: i, Payload: "mock"}
 		if i < 5 {
 			job.Handler = blockingHandler
 		}
@@ -75,8 +76,8 @@ func TestWorkerPoolNonBlocking(t *testing.T) {
 	pool.Release()
 
 	// Check results
-	if pool.TotalSuceed != 5 {
-		t.Errorf("Expected 5 successful jobs, got %d", pool.TotalSuceed)
+	if pool.TotalSucceed != 5 {
+		t.Errorf("Expected 5 successful jobs, got %d", pool.TotalSucceed)
 	}
 	if pool.TotalFailed != 0 {
 		t.Errorf("Expected 0 failed jobs, got %d", pool.TotalFailed)

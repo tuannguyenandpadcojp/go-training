@@ -32,9 +32,9 @@ type Pool struct {
 	nonBlocking bool
 
 	// Job result
-	results     chan Result
+	results      chan Result
 	TotalSucceed int
-	TotalFailed int
+	TotalFailed  int
 }
 
 type PoolOpt func(p *Pool)
@@ -75,7 +75,7 @@ func (p *Pool) Start(ctx context.Context) {
 
 	// spawn worker goroutine
 	for i := range p.workers {
-		go worker(p.ctx, i, p.jobs, p.results, &p.workerWaitGroup)
+		go Worker(p.ctx, i, p.jobs, p.results, &p.workerWaitGroup)
 	}
 
 	// aggregate job's result
@@ -84,7 +84,7 @@ func (p *Pool) Start(ctx context.Context) {
 		defer p.resultWaitGroup.Done()
 		for result := range p.results {
 			if result.State == 1 {
-				p.TotalSuceed++
+				p.TotalSucceed++
 			} else {
 				p.TotalFailed++
 			}

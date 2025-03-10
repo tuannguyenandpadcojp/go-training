@@ -6,8 +6,22 @@ import (
 	"sync"
 )
 
-func worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
+type Result struct {
+	JobID int
+	State int // 0: Failed, 1: Success
+}
+
+type JobHandler func(ctx context.Context) Result
+
+type Job struct {
+	ID      int
+	Payload string
+	Handler JobHandler
+}
+
+func Worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
+
 	for {
 		select {
 		case <-ctx.Done():
