@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/tuannguyenandpadcojp/go-training/lqm/utils"
-	"github.com/tuannguyenandpadcojp/go-training/lqm/week2/goroutine/pkg/worker"
+	"github.com/tuannguyenandpadcojp/go-training/lqm/week2/day2/pkg/worker"
 	"go.uber.org/goleak"
 )
 

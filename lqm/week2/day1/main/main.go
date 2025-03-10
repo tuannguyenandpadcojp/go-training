@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tuannguyenandpadcojp/go-training/lqm/week2/goroutine/pkg/worker"
+	"github.com/tuannguyenandpadcojp/go-training/lqm/week2/day1/worker"
 )
 
 func main() {
@@ -18,11 +18,7 @@ func main() {
 	const numWorkers = 20
 	const maxJobs = 10
 
-	pool, err := worker.NewWorkerPool(maxJobs, numWorkers)
-	if err != nil {
-		log.Println("errors: ", err)
-		return
-	}
+	pool := worker.NewWorkerPool(maxJobs, numWorkers)
 	pool.Start(context.Background())
 
 	c := make(chan os.Signal, 1)
