@@ -3,8 +3,10 @@ module github.com/tuannguyenandpadcojp/go-training
 go 1.23.4
 
 require (
+	github.com/google/go-cmp v0.7.0
+	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	go.uber.org/goleak v1.3.0
-	golang.org/x/tools v0.31.0
 )
 
-require golang.org/x/mod v0.24.0 // indirect
+require github.com/stretchr/testify v1.9.0 // indirect

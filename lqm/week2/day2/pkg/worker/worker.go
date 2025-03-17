@@ -8,19 +8,19 @@ import (
 )
 
 type Result struct {
-	JobID int
+	JobID string
 	State int // 0: Failed, 1: Success
 }
 
-type JobHandler func(ctx context.Context) Result
+type JobHandler func() Result
 
 type Job struct {
-	ID      int
+	ID      string
 	Payload string
 	Handler JobHandler
 }
 
-const time_limit = 5 * time.Second
+const time_limit = 10 * time.Second
 
 func Worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -40,8 +40,8 @@ func Worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- R
 				<-timer.C
 			}
 			timer.Reset(time_limit)
-			log.Printf("Worker %d processed job %d", workerID, job.ID)
-			results <- job.Handler(ctx)
+			log.Printf("Worker %d processed job %v", workerID, job.ID)
+			results <- job.Handler()
 		case <-timer.C:
 			// No job received for 5 seconds, free the worker
 			log.Printf("Worker %d is freed due to inactivity", workerID)

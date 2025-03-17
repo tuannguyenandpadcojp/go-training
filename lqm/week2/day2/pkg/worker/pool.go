@@ -140,3 +140,9 @@ func (p *Pool) Submit(job Job) error {
 		return nil
 	}
 }
+
+func (p *Pool) Results() (totalSucceed, totalFailed int) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	return p.TotalSucceed, p.TotalFailed
+}
