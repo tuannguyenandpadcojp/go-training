@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -18,7 +19,13 @@ import (
 )
 
 func main() {
-	cfg := loadConfig()
+	curWd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Cannot get working directory: %v", err)
+	}
+
+	envPath := filepath.Join(curWd, ".env")
+	cfg := loadConfig(envPath)
 
 	// init worker pool
 	pool, err := worker.NewPool(worker.Config{
@@ -57,11 +64,11 @@ func main() {
 	server.Stop(ctx)
 }
 
-func loadConfig() config.Config {
-	// Load the configuration from os environment
-	if err := godotenv.Load("../../../../../.env"); err != nil {
-		log.Fatal("Error loading .env file")
+func loadConfig(envPath string) config.Config {
+	if err := godotenv.Load(envPath); err != nil {
+		log.Printf("Warning. Error loading env file %v. Loading dafault env", envPath)
 	}
+
 	c := config.Config{
 		PoolSize:              2,
 		MaxJobs:               2,

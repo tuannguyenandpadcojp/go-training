@@ -20,7 +20,7 @@ type Job struct {
 	Handler JobHandler
 }
 
-const time_limit = 10 * time.Second
+const time_limit = 100 * time.Second
 
 func Worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
 	defer wg.Done()

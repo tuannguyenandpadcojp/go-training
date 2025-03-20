@@ -107,6 +107,10 @@ func (p *Pool) Start(ctx context.Context) {
 func (p *Pool) Release() {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	if !p.running {
+		log.Println("Worker Pool is not running ...")
+		return
+	}
 	// close the Jobs channel to prevent dispatcher send jobs
 	close(p.jobs)
 	// wait for all workers to finish processing the rest of jobs

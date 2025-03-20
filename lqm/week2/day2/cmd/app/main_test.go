@@ -44,11 +44,14 @@ func Test_loadConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var got config.Config
 			if tt.prepareVariables != nil {
 				tt.prepareVariables()
+				got = loadConfig("")
+			} else {
+				got = loadConfig("../../.env")
 			}
 			want := tt.want
-			got := loadConfig()
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("loadConfig() mismatch (-want +got):\n%s", diff)
 			}
