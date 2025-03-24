@@ -113,7 +113,7 @@ func (p *Pool) Start(ctx context.Context) {
 				workerCount++
 				return true
 			})
-			log.Printf("Current: %d workers, active: %d", workerCount, p.activeWorkers)
+			log.Printf("Current: %d workers, active: %d", workerCount, atomic.LoadInt32(&p.activeWorkers))
 			PrintMap(&p.workers)
 			time.Sleep(5 * time.Second)
 		}
@@ -143,9 +143,7 @@ func (p *Pool) Release() {
 	// close the Jobs channel to prevent dispatcher send jobs
 	close(p.jobs)
 	// wait for all workers to finish processing the rest of jobs
-	log.Print("waiting group")
 	p.workerWaitGroup.Wait()
-	log.Print("wait group done")
 	// call context.CancelFunc to notify all workers to stop
 	p.cancelFunc()
 	// close the result channel to stop the goroutine aggregate the job's result

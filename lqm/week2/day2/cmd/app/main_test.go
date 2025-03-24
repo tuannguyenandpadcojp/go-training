@@ -34,7 +34,7 @@ func Test_loadConfig(t *testing.T) {
 			envPath:          "test.env",
 			want: config.Config{
 				PoolSize: 5,
-				MaxJobs:  3,
+				MaxJobs:  10,
 				PoolMin:  3,
 				BannedNames: map[string]struct{}{
 					"Alice": {},
