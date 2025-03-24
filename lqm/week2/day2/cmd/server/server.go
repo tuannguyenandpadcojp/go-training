@@ -39,7 +39,7 @@ func NewServer(cfg config.Config, pool worker.WorkerPool, service internal.Async
 
 func (s *Server) Start() {
 	// start worker pool
-	log.Printf("Worker pool: starting with %d workers - %d max jobs", s.config.PoolSize, s.config.MaxJobs)
+	log.Printf("Worker pool: starting with %d workers - %d max jobs - %d min workers", s.config.PoolSize, s.config.MaxJobs, s.config.PoolMin)
 	s.pool.Start(context.Background())
 
 	// start HTTP server

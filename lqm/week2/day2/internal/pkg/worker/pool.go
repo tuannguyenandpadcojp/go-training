@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	PoolSize    int
+	PoolMin     int
 	MaxJobs     int
 	NonBlocking bool
 }
@@ -20,7 +21,7 @@ func NewPool(cfg Config) (WorkerPool, error) {
 		opts = append(opts, w.WithNonBlocking)
 	}
 
-	newPool, err := w.NewWorkerPool(cfg.MaxJobs, cfg.PoolSize, opts...)
+	newPool, err := w.NewWorkerPool(cfg.MaxJobs, cfg.PoolSize, cfg.PoolMin, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,8 @@ package config
 
 type Config struct {
 	// Worker pool configuration
-	PoolSize              int  // the number of worker in the pool - default 2
+	PoolSize              int // the number of worker in the pool - default 2
+	PoolMin               int // the number of minimum workers in the pool - default 1
 	MaxJobs               int  // the maximum number of jobs in the queue - default 2
 	WorkerPoolNonBlocking bool // non-blocking mode - default false
 

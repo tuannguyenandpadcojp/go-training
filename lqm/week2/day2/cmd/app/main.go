@@ -30,6 +30,7 @@ func main() {
 	// init worker pool
 	pool, err := worker.NewPool(worker.Config{
 		PoolSize:    cfg.PoolSize,
+		PoolMin:     cfg.PoolMin,
 		MaxJobs:     cfg.MaxJobs,
 		NonBlocking: cfg.WorkerPoolNonBlocking,
 	})
@@ -66,11 +67,12 @@ func main() {
 
 func loadConfig(envPath string) config.Config {
 	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("Warning. Error loading env file %v. Loading dafault env", envPath)
+		log.Printf("[WARN] Error loading env file %v. Loading dafault env", envPath)
 	}
 
 	c := config.Config{
 		PoolSize:              2,
+		PoolMin:               1,
 		MaxJobs:               2,
 		WorkerPoolNonBlocking: false,
 		BannedNames:           map[string]struct{}{},
@@ -82,6 +84,13 @@ func loadConfig(envPath string) config.Config {
 			log.Fatalf("Invalid pool size: %v", err)
 		}
 		c.PoolSize = pz
+	}
+	if poolMin := os.Getenv("POOL_MIN"); poolMin != "" {
+		pm, err := strconv.Atoi(poolMin)
+		if err != nil {
+			log.Fatalf("Invalid pool min: %v", err)
+		}
+		c.PoolMin = pm
 	}
 	if maxJobs := os.Getenv("MAX_JOBS"); maxJobs != "" {
 		mj, err := strconv.Atoi(maxJobs)

@@ -12,13 +12,16 @@ func Test_loadConfig(t *testing.T) {
 	tests := []struct {
 		name             string
 		prepareVariables func()
+		envPath          string
 		want             config.Config
 	}{
 		{
 			name:             "default config",
 			prepareVariables: func() {},
+			envPath:          "",
 			want: config.Config{
 				PoolSize:              2,
+				PoolMin:               1,
 				MaxJobs:               2,
 				BannedNames:           map[string]struct{}{},
 				WorkerPoolNonBlocking: false,
@@ -26,15 +29,35 @@ func Test_loadConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "custom config",
+			name:             "custom env config",
+			prepareVariables: func() {},
+			envPath:          "test.env",
+			want: config.Config{
+				PoolSize: 5,
+				MaxJobs:  3,
+				PoolMin:  3,
+				BannedNames: map[string]struct{}{
+					"Alice": {},
+					"Bob":   {},
+				},
+				WorkerPoolNonBlocking: true,
+				HTTPPort:              8080,
+			},
+		},
+		{
+			name: "os env config",
 			prepareVariables: func() {
 				_ = os.Setenv("POOL_SIZE", "10")
+				_ = os.Setenv("POOL_MIN", "5")
 				_ = os.Setenv("MAX_JOBS", "20")
 				_ = os.Setenv("WORKER_POOL_NON_BLOCKING", "true")
+				_ = os.Setenv("BANNED_NAMES", "")
 				_ = os.Setenv("HTTP_PORT", "8081")
 			},
+			envPath: "",
 			want: config.Config{
 				PoolSize:              10,
+				PoolMin:               5,
 				MaxJobs:               20,
 				BannedNames:           map[string]struct{}{},
 				WorkerPoolNonBlocking: true,
@@ -47,11 +70,15 @@ func Test_loadConfig(t *testing.T) {
 			if tt.prepareVariables != nil {
 				tt.prepareVariables()
 			}
-			got := loadConfig("")
+			got := loadConfig(tt.envPath)
 			want := tt.want
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("loadConfig() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
+}
+
+func TestAsyncGreeter(t *testing.T) {
+
 }

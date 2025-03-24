@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -20,32 +21,60 @@ type Job struct {
 	Handler JobHandler
 }
 
-const time_limit = 100 * time.Second
+type Worker struct {
+	ID        string
+	IdleState bool
+}
 
-func Worker(ctx context.Context, workerID int, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup) {
-	defer wg.Done()
+const time_limit = 3 * time.Second
+
+func StartWorker(ctx context.Context, workerID string, minWorkers int, activeWorkers *int32, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup, workersPtr *sync.Map, freeLock *sync.Mutex) {
+	workers := workersPtr
 	timer := time.NewTimer(time_limit)
-	defer timer.Stop()
+	isWorkerFreed := false
+	defer func() {
+		wg.Done()
+		atomic.AddInt32(activeWorkers, -1)
+		timer.Stop()
+	}()
 
 	for {
+		if !isWorkerFreed {
+			log.Printf("Worker %v is running", workerID)
+		}
 		select {
 		case <-ctx.Done():
 			return
+
 		case job, ok := <-jobs:
 			if !ok {
 				// Job channels are closed
 				return
 			}
-			if !timer.Stop() {
-				<-timer.C
-			}
 			timer.Reset(time_limit)
-			log.Printf("Worker %d processed job %v", workerID, job.ID)
+
 			results <- job.Handler()
+			log.Printf("Worker %v processed job %v", workerID, job.ID)
+
+			if value, ok := workers.Load(workerID); ok {
+				worker := value.(Worker)
+				worker.IdleState = true
+				workers.Store(workerID, worker)
+			}
+
 		case <-timer.C:
-			// No job received for 5 seconds, free the worker
-			log.Printf("Worker %d is freed due to inactivity", workerID)
-			return
+			// Time out, free the worker
+			freeLock.Lock()
+			// defer freeLock.Unlock() // Does not work if the worker is not free (stuck at timer.Reset)
+			if atomic.LoadInt32(activeWorkers) > int32(minWorkers) {
+				log.Printf("Worker %v is freed due to inactivity", workerID)
+				workers.Delete(workerID)
+				isWorkerFreed = true
+				freeLock.Unlock()
+				return
+			}
+			timer.Reset(time_limit) // Does not work with defer
+			freeLock.Unlock()
 		}
 	}
 }
