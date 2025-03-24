@@ -31,7 +31,6 @@ const time_limit = 3 * time.Second
 func StartWorker(ctx context.Context, workerID string, minWorkers int, activeWorkers *int32, jobs <-chan Job, results chan<- Result, wg *sync.WaitGroup, workersPtr *sync.Map, freeLock *sync.Mutex) {
 	workers := workersPtr
 	timer := time.NewTimer(time_limit)
-	isWorkerFreed := false
 	defer func() {
 		wg.Done()
 		atomic.AddInt32(activeWorkers, -1)
@@ -39,9 +38,6 @@ func StartWorker(ctx context.Context, workerID string, minWorkers int, activeWor
 	}()
 
 	for {
-		if !isWorkerFreed {
-			log.Printf("Worker %v is running", workerID)
-		}
 		select {
 		case <-ctx.Done():
 			return
@@ -69,7 +65,6 @@ func StartWorker(ctx context.Context, workerID string, minWorkers int, activeWor
 			if atomic.LoadInt32(activeWorkers) > int32(minWorkers) {
 				log.Printf("Worker %v is freed due to inactivity", workerID)
 				workers.Delete(workerID)
-				isWorkerFreed = true
 				freeLock.Unlock()
 				return
 			}

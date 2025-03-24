@@ -78,7 +78,3 @@ func Test_loadConfig(t *testing.T) {
 		})
 	}
 }
-
-func TestAsyncGreeter(t *testing.T) {
-
-}

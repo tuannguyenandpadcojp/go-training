@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type Pool struct {
@@ -105,19 +104,6 @@ func (p *Pool) Start(ctx context.Context) {
 		id := strconv.Itoa(i)
 		go StartWorker(p.ctx, id, p.minWorkers, &p.activeWorkers, p.jobs, p.results, &p.workerWaitGroup, &p.workers, &p.submitLock)
 	}
-
-	go func() {
-		for {
-			workerCount := 0
-			p.workers.Range(func(_, _ any) bool {
-				workerCount++
-				return true
-			})
-			log.Printf("Current: %d workers, active: %d", workerCount, atomic.LoadInt32(&p.activeWorkers))
-			PrintMap(&p.workers)
-			time.Sleep(5 * time.Second)
-		}
-	}()
 
 	// aggregate job's result
 	p.resultWaitGroup.Add(1)
