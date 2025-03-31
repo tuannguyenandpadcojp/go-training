@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tm.v1;
+option go_package = "github.com/tuannguyenandpadcojp/go-training/week7/day1/internal/pb/v1;v1";
+
+import "v1/client.proto";
+
+service ClientService {
+  rpc GetClient(GetClientRequest) returns (GetClientResponse);
+}
+
+message UserAttributes {
+  // User ID of the user making the request
+  string user_id = 1;
+  // Client ID of the client that the user is belonging to (main client)
+  string client_id = 2;
+  // Client ID of the client being requested
+  string current_client_id = 3;
+}
+
+message GetClientRequest {
+  UserAttributes user_attributes = 1;
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
